@@ -53,7 +53,7 @@ For GitHub Pages Deployment
 
 1. Fork this repository
 2. Enable GitHub Pages in your repository settings
-3. Access your application at https://kibiti.github.io/tuition-packages-generator
+3. Access your application at https://github.com/kibiti/elimuhub-tuition-packages-generator.git
 
 ---
 
