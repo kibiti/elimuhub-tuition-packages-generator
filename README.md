@@ -38,7 +38,7 @@ The ElimuHub Tuition Packages Generator is a professional web application design
 ### Quick Start
 1. Clone the repository:
 ```bash
-git clone https://github.com/elimuhub/tuition-packages-generator.git
+git clone [https://github.com/elimuhub/tuition-packages-generator.git](https://github.com/kibiti/elimuhub-tuition-packages-generator.git)
 ```
 
 1. Navigate to the project directory:
@@ -53,7 +53,7 @@ For GitHub Pages Deployment
 
 1. Fork this repository
 2. Enable GitHub Pages in your repository settings
-3. Access your application at https://yourusername.github.io/tuition-packages-generator
+3. Access your application at https://kibiti.github.io/tuition-packages-generator
 
 ---
 
