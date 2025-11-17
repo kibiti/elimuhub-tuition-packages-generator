@@ -13,35 +13,98 @@ class PackageCalculator {
         };
         
         this.serviceFee = 1000;
+        this.currentCalculation = null;
     }
 
-    calculateSubjectCost(packageType, sessionDuration, daysPerWeek) {
+    // Calculate cost for a single subject
+    calculateSubjectCost(packageType, sessionDuration, subjectDays) {
         const hourlyRate = this.rates[packageType];
-        return hourlyRate * sessionDuration * daysPerWeek;
+        const dailyCost = hourlyRate * sessionDuration;
+        const weeklyCost = dailyCost * subjectDays;
+        
+        return {
+            daily: dailyCost,
+            weekly: weeklyCost,
+            hourly: hourlyRate
+        };
     }
 
+    // Calculate complete package costs
     calculatePackageCost(packageType, subjects, sessionDuration) {
-        const weeklyCost = subjects.reduce((total, subject) => {
-            return total + this.calculateSubjectCost(
+        let totalDailyCost = 0;
+        let totalWeeklyCost = 0;
+        const subjectBreakdown = [];
+        
+        // Calculate costs for each subject
+        subjects.forEach(subject => {
+            const subjectCost = this.calculateSubjectCost(
                 packageType, 
                 sessionDuration, 
                 subject.daysPerWeek
             );
-        }, 0);
+            
+            totalDailyCost += subjectCost.daily;
+            totalWeeklyCost += subjectCost.weekly;
+            
+            subjectBreakdown.push({
+                name: subject.name,
+                daysPerWeek: subject.daysPerWeek,
+                ...subjectCost
+            });
+        });
 
-        const firstWeekCost = weeklyCost + this.serviceFee;
+        const firstWeekCost = totalWeeklyCost + this.serviceFee;
+        const packageDays = this.daysPerWeek[packageType];
 
-        return {
-            weeklyCost,
+        this.currentCalculation = {
+            packageType,
+            sessionDuration,
+            totalDailyCost,
+            totalWeeklyCost,
             firstWeekCost,
             serviceFee: this.serviceFee,
-            perSubjectCost: subjects.map(subject => ({
-                name: subject.name,
-                cost: this.calculateSubjectCost(packageType, sessionDuration, subject.daysPerWeek)
-            }))
+            packageDays,
+            subjectBreakdown,
+            perHourRate: this.rates[packageType]
         };
+
+        return this.currentCalculation;
     }
 
+    // Calculate per-day breakdown
+    getDailyBreakdown(subjects, packageType) {
+        const packageDays = this.daysPerWeek[packageType];
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        
+        const breakdown = {};
+        days.slice(0, packageDays).forEach(day => {
+            breakdown[day] = {
+                subjects: [],
+                dailyTotal: 0
+            };
+        });
+
+        // Distribute subjects across days (simplified - in real app would use actual schedule)
+        subjects.forEach((subject, index) => {
+            const subjectDays = Math.min(subject.daysPerWeek, packageDays);
+            const dailyCost = this.rates[packageType] * this.currentCalculation.sessionDuration;
+            
+            for (let i = 0; i < subjectDays; i++) {
+                const dayIndex = (index + i) % packageDays;
+                const day = days[dayIndex];
+                
+                breakdown[day].subjects.push({
+                    name: subject.name,
+                    cost: dailyCost
+                });
+                breakdown[day].dailyTotal += dailyCost;
+            }
+        });
+
+        return breakdown;
+    }
+
+    // Validate package configuration
     validatePackage(subjects, packageType) {
         const errors = [];
 
@@ -69,6 +132,7 @@ class PackageCalculator {
         };
     }
 
+    // Format currency for display
     formatCurrency(amount) {
         return new Intl.NumberFormat('en-KE', {
             style: 'currency',
@@ -78,6 +142,7 @@ class PackageCalculator {
         }).format(amount);
     }
 
+    // Get package details
     getPackageDetails(packageType) {
         const packages = {
             comprehensive: {
@@ -101,6 +166,19 @@ class PackageCalculator {
         };
 
         return packages[packageType];
+    }
+
+    // Get calculation summary for display
+    getCalculationSummary() {
+        if (!this.currentCalculation) return null;
+        
+        return {
+            perDay: this.currentCalculation.totalDailyCost,
+            perWeek: this.currentCalculation.totalWeeklyCost,
+            firstWeek: this.currentCalculation.firstWeekCost,
+            hourlyRate: this.currentCalculation.perHourRate,
+            serviceFee: this.serviceFee
+        };
     }
 }
 
